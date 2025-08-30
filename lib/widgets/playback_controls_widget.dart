@@ -1,69 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:provider/provider.dart';
 
-import '../models/track_model.dart';
+import '../providers/music_player_provider.dart';
 
-class PlaybackControlsWidget extends StatefulWidget {
-  final AudioPlayer player;
-  final List<Track> trackList;
-  final int currentIndex;
-  final Function(int newIndex) onTrackChanged;
-
-  const PlaybackControlsWidget({
-    super.key,
-    required this.player,
-    required this.trackList,
-    required this.currentIndex,
-    required this.onTrackChanged,
-    required Null Function() onPrevious,
-    required Null Function() onNext,
-  });
-
-  @override
-  State<PlaybackControlsWidget> createState() => _PlaybackControlsWidgetState();
-}
-
-class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
-  late int _currentIndex;
-  bool isPlaying = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.currentIndex;
-    isPlaying = widget.player.playing;
-
-    widget.player.playerStateStream.listen((state) {
-      setState(() {
-        isPlaying = state.playing;
-      });
-    });
-  }
-
-  Future<void> _playTrack(int index) async {
-    final track = widget.trackList[index];
-    await widget.player.setUrl(track.previewUrl);
-    widget.player.play();
-    setState(() {
-      _currentIndex = index;
-    });
-    widget.onTrackChanged(index);
-  }
-
-  void _nextTrack() {
-    if (_currentIndex < widget.trackList.length - 1) {
-      _playTrack(_currentIndex + 1);
-    }
-  }
-
-  void _previousTrack() {
-    if (_currentIndex > 0) {
-      _playTrack(_currentIndex - 1);
-    }
-  }
+class PlaybackControlsWidget extends StatelessWidget {
+  const PlaybackControlsWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<MusicPlayerProvider>(context);
+    final player = provider.player;
+    final track = provider.currentTrack;
+
+    if (track == null) return const SizedBox.shrink();
+
+    final isPlaying = player.playing;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -71,7 +23,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
           iconSize: 48,
           color: Colors.white,
           icon: const Icon(Icons.skip_previous),
-          onPressed: _previousTrack,
+          onPressed: provider.previousTrack,
         ),
         const SizedBox(width: 20),
         IconButton(
@@ -80,9 +32,9 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
           icon: Icon(isPlaying ? Icons.pause_circle : Icons.play_circle),
           onPressed: () {
             if (isPlaying) {
-              widget.player.pause();
+              provider.pause();
             } else {
-              widget.player.play();
+              provider.playTrack(track);
             }
           },
         ),
@@ -91,7 +43,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
           iconSize: 48,
           color: Colors.white,
           icon: const Icon(Icons.skip_next),
-          onPressed: _nextTrack,
+          onPressed: provider.nextTrack,
         ),
       ],
     );

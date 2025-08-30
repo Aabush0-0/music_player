@@ -28,7 +28,7 @@ class _SplashScreenState extends State<SplashScreen> {
         ],
       ),
       backgroundColor: Colors.black,
-      duration: 4000,
+      duration: 3000,
       splashIconSize: 2000,
       splashTransition: SplashTransition.rotationTransition,
       curve: Curves.bounceInOut,

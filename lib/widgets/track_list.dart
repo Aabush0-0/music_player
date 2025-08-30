@@ -1,68 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:provider/provider.dart';
 
-import '../models/track_model.dart';
+import '../providers/music_player_provider.dart';
 import '../screens/now_playing_screen.dart';
 
 class TrackList extends StatelessWidget {
-  final ValueNotifier<List<Track>> trackListNotifier;
-  final Function(String url, String title) onTrackTap;
-  final AudioPlayer player;
-
-  const TrackList({
-    super.key,
-    required this.trackListNotifier,
-    required this.onTrackTap,
-    required this.player,
-  });
+  const TrackList({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<Track>>(
-      valueListenable: trackListNotifier,
-      builder: (context, trackList, _) {
-        return ListView.builder(
-          itemCount: trackList.length,
-          itemBuilder: (context, index) {
-            final track = trackList[index];
-            return ListTile(
-              tileColor: Colors.grey[900],
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              leading: Image.network(
-                track.albumCover,
-                width: 50,
-                height: 50,
-                fit: BoxFit.cover,
-              ),
-              title: Text(
-                track.title,
-                style: const TextStyle(color: Colors.white),
-              ),
-              subtitle: Text(
-                track.artistName,
-                style: TextStyle(color: Colors.grey[400]),
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.play_arrow, color: Colors.white),
-                onPressed: () async {
-                  await onTrackTap(track.previewUrl, track.title);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => NowPlayingScreen(
-                        player: player,
-                        trackList: trackList,
-                        currentIndex: index,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
+    final provider = Provider.of<MusicPlayerProvider>(context);
+    final tracks = provider.trackList;
+
+    return ListView.builder(
+      itemCount: tracks.length,
+      itemBuilder: (context, index) {
+        final track = tracks[index];
+        return ListTile(
+          tileColor: Colors.grey[900],
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          leading: Image.network(
+            track.albumCover,
+            width: 50,
+            height: 50,
+            fit: BoxFit.cover,
+          ),
+          title: Text(track.title, style: const TextStyle(color: Colors.white)),
+          subtitle: Text(
+            track.artistName,
+            style: TextStyle(color: Colors.grey[400]),
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.play_arrow, color: Colors.white),
+            onPressed: () {
+              provider.playTrack(track);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NowPlayingScreen()),
+              );
+            },
+          ),
         );
       },
     );
